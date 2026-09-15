@@ -1,6 +1,8 @@
 // POST /api/briefing
-// Recebe { form } e retorna { briefingIA } gerado pelo Gemini (gemini-1.5-flash, free tier).
+// Recebe { form } e retorna { briefingIA } gerado pelo Gemini.
 // Nunca calcula preço aqui — precificação é sempre feita em JS puro (ver lib/precificacao.js).
+
+const GEMINI_MODEL = 'gemini-3.5-flash'; // gemini-1.5-flash foi descontinuado (404) — atualizar aqui quando o Google trocar de novo
 
 function montarPrompt(form) {
   const { identificacao, marca, objetivos, publico, tom, escopo, pautas, recursos } = form;
@@ -82,14 +84,20 @@ export async function POST(request) {
 
     const prompt = montarPrompt(form);
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // Desde 2026 o Gemini exige o cabeçalho x-goog-api-key (as novas "auth keys" não
+    // funcionam mais pelo parâmetro ?key= na URL, que era só pras antigas "standard keys").
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
     const geminiRes = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.7,
+          maxOutputTokens: 4000,
+          thinkingConfig: { thinkingLevel: 'low' },
           responseMimeType: 'application/json',
         },
       }),
@@ -104,7 +112,9 @@ export async function POST(request) {
     }
 
     const data = await geminiRes.json();
-    const texto = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    // Gemini 3.x pode incluir partes de "thinking" antes do texto final — filtramos só as partes de texto reais.
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const texto = parts.filter((p) => p?.text && !p.thought).map((p) => p.text).join('');
     const briefingIA = extrairJSON(texto);
 
     if (!briefingIA || !Array.isArray(briefingIA.pautas_sugeridas)) {
