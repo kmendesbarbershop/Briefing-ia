@@ -2,7 +2,7 @@
 // Recebe { form } e retorna { briefingIA } gerado pelo Gemini.
 // Nunca calcula preço aqui — precificação é sempre feita em JS puro (ver lib/precificacao.js).
 
-const GEMINI_MODEL = 'gemini-3.5-flash'; // gemini-1.5-flash foi descontinuado (404) — atualizar aqui quando o Google trocar de novo
+const GEMINI_MODEL = 'gemini-3.6-flash'; // confirmado funcionando na conta (mesmo modelo usado no Dossiê IA)
 
 function montarPrompt(form) {
   const { identificacao, marca, objetivos, publico, tom, escopo, pautas, recursos } = form;
@@ -84,15 +84,12 @@ export async function POST(request) {
 
     const prompt = montarPrompt(form);
 
-    // Desde 2026 o Gemini exige o cabeçalho x-goog-api-key (as novas "auth keys" não
-    // funcionam mais pelo parâmetro ?key= na URL, que era só pras antigas "standard keys").
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+    // Confirmado com o Dossiê IA (que autentica com sucesso nesta conta): usar ?key= na URL,
+    // não o cabeçalho x-goog-api-key — essa conta específica não funciona com o cabeçalho.
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
     const geminiRes = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
