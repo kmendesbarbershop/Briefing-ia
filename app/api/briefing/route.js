@@ -2,7 +2,29 @@
 // Recebe { form } e retorna { briefingIA } gerado pelo Gemini.
 // Nunca calcula preço aqui — precificação é sempre feita em JS puro (ver lib/precificacao.js).
 
+// Dá tempo suficiente para as tentativas automáticas abaixo (o padrão da Vercel pode ser curto demais).
+export const maxDuration = 60;
+
 const GEMINI_MODEL = 'gemini-3.6-flash'; // confirmado funcionando na conta (mesmo modelo usado no Dossiê IA)
+
+// Quando o Google responde 503 (servidor sobrecarregado), tenta de novo sozinho.
+// Só o 503 é repetido — outros erros (401, 400 etc.) aparecem na hora, pois repetir não resolveria.
+const MAX_TENTATIVAS = 3;
+const ESPERA_ENTRE_TENTATIVAS_MS = [2000, 4000]; // espera antes da 2ª e da 3ª tentativa
+
+const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function chamarGeminiComRetry(url, opcoes) {
+  let resposta;
+  for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+    resposta = await fetch(url, opcoes);
+    if (resposta.status !== 503) return resposta;
+    if (tentativa < MAX_TENTATIVAS) {
+      await esperar(ESPERA_ENTRE_TENTATIVAS_MS[tentativa - 1]);
+    }
+  }
+  return resposta; // última resposta (503), tratada como erro normal pelo código abaixo
+}
 
 function montarPrompt(form) {
   const { identificacao, marca, objetivos, publico, tom, escopo, pautas, recursos } = form;
@@ -87,7 +109,7 @@ export async function POST(request) {
     // Confirmado com o Dossiê IA (que autentica com sucesso nesta conta): usar ?key= na URL,
     // não o cabeçalho x-goog-api-key — essa conta específica não funciona com o cabeçalho.
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-    const geminiRes = await fetch(url, {
+    const geminiRes = await chamarGeminiComRetry(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
