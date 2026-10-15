@@ -1,0 +1,51 @@
+/* app/planos.css — estilos dos planos, módulos e preços do Briefing IA.
+ * Arquivo separado de propósito: não mexe no globals.css que já está no ar.
+ * Usa as variáveis de cor que o globals.css já define (com valores de reserva). */
+
+.planos-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
+@media (min-width: 720px) { .planos-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.plano-card {
+  position: relative; background: rgba(255,255,255,0.4); border: 1px solid rgba(43,51,64,0.25);
+  border-radius: 10px; padding: 16px 14px 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.plano-card.plano-rec { border: 2px solid var(--rust, #b23b2e); background: rgba(255,255,255,0.65); }
+.plano-badge {
+  position: absolute; top: -11px; left: 12px; background: var(--rust, #b23b2e); color: #fff;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 4px;
+}
+.plano-nome { font-size: 18px; font-weight: 700; margin: 0; }
+.plano-escopo { font-family: 'IBM Plex Mono', monospace; font-size: 12px; opacity: 0.75; margin: 0; }
+.plano-mods { font-size: 13px; margin: 0; line-height: 1.4; }
+.plano-mods span { display: block; opacity: 0.7; font-size: 12px; margin-top: 2px; }
+.plano-linha { display: flex; flex-direction: column; gap: 1px; border-top: 1px dashed rgba(43,51,64,0.25); padding-top: 8px; }
+.plano-linha .rotulo { font-size: 12px; opacity: 0.75; }
+.plano-linha .valor { font-size: 20px; font-weight: 700; }
+.plano-linha .valor small { font-size: 12px; font-weight: 500; opacity: 0.7; }
+.plano-linha .a-partir { font-size: 12px; font-weight: 500; opacity: 0.75; margin-right: 4px; }
+
+.config-card { margin-top: 14px; }
+
+.landing-linha, .custos-aviso {
+  margin-top: 12px; font-size: 14px; padding: 10px 14px; border-radius: 8px;
+  background: rgba(43,51,64,0.06); border: 1px solid rgba(43,51,64,0.15);
+}
+.custos-aviso { font-size: 13px; opacity: 0.85; }
+
+.aviso-interno {
+  margin-top: 12px; font-size: 13px; padding: 10px 14px; border-radius: 8px;
+  background: rgba(184,134,44,0.18); border-left: 4px solid var(--gold, #b8862c);
+}
+.aviso-interno b { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 2px; }
+
+.rec-bloco .rec-nome { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
+.rec-bloco .rec-just { margin: 0; line-height: 1.5; }
+
+.modulos-lista { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.modulo-item {
+  display: flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer;
+  padding: 8px 10px; border: 1px solid rgba(43,51,64,0.2); border-radius: 8px; background: rgba(255,255,255,0.35);
+}
+.modulo-item input { width: 18px; height: 18px; accent-color: var(--ink, #2b3340); flex-shrink: 0; }
+.modulo-item .modulo-valor { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; opacity: 0.7; white-space: nowrap; }
