@@ -68,8 +68,18 @@ Com base SOMENTE nessas informações, gere um briefing estratégico de conteúd
     "semana2": "foco da semana 2, no máximo 20 palavras",
     "semana3": "foco da semana 3, no máximo 20 palavras",
     "semana4": "foco da semana 4, no máximo 20 palavras"
+  },
+  "plano_recomendado": {
+    "nome": "exatamente um destes três: Essencial, Estratégico ou Sistema",
+    "justificativa": "1 a 2 frases ligando a escolha às dores e aos objetivos informados acima"
   }
 }
+
+Sobre o campo "plano_recomendado" — escolha o plano que melhor resolve as dores e objetivos informados:
+- Essencial: foco em Reels e posts, presença consistente e profissional, sem automação.
+- Estratégico: mais Reels e Stories, plano de vendas de 30 dias e automação de Direct com Manychat, para quem quer transformar conteúdo em vendas.
+- Sistema: o Estratégico mais gestão de tráfego pago e Agente de IA, para quem já quer um funil completo e atendimento automatizado.
+NUNCA informe preço, valor, desconto ou qualquer número de investimento — a precificação é feita por outro sistema.
 
 Gere entre 5 e 8 pautas sugeridas, distribuídas entre as plataformas informadas no escopo. Seja específico e prático, evite jargão técnico. Responda em português do Brasil.
 
@@ -142,6 +152,15 @@ export async function POST(request) {
         { status: 502 }
       );
     }
+
+    // Normaliza o plano recomendado: só aceita um dos 3 nomes válidos; qualquer outra coisa é descartada.
+    const NOMES_VALIDOS = ['Essencial', 'Estratégico', 'Sistema'];
+    const rec = briefingIA.plano_recomendado;
+    const nomeBruto = String(rec?.nome || '').trim();
+    const nomeValido = NOMES_VALIDOS.find((n) => n.toLowerCase() === nomeBruto.toLowerCase().replace('sistema synapse', 'sistema'));
+    briefingIA.plano_recomendado = nomeValido
+      ? { nome: nomeValido, justificativa: String(rec?.justificativa || '').slice(0, 400) }
+      : null;
 
     return Response.json({ briefingIA });
   } catch (err) {
